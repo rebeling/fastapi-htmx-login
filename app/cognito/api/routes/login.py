@@ -54,11 +54,10 @@ async def forgot_password_fragment():
 async def forgot_password(
     request: Request,
     background: BackgroundTasks,
-    # Support both field names: tests send `email`, UI sends `username`
-    email: str | None = Form(default=None),
-    username: str | None = Form(default=None),
 ):
-    email_value = email or username
+    # Robustly accept both 'email' and 'username' fields
+    form = await request.form()
+    email_value = (form.get("email") or form.get("username") or "").strip()
     if not email_value:
         return htmx_message("Email is required.")
 

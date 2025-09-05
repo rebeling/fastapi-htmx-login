@@ -80,7 +80,7 @@ def test_forgot_password_fragment_and_post(client, monkeypatch):
 
     # Avoid sending real emails
     monkeypatch.setattr("app.cognito.mails.send_password_reset_email", lambda *args, **kwargs: None)
-    res = client.post("/forgot-password", data={"email": "test@example.com"})
+    res = client.post("/forgot-password", data={"username": "test@example.com"})
     assert res.status_code == 200
     assert "reset link has been sent" in res.text.lower()
 
