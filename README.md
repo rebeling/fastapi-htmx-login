@@ -3,6 +3,8 @@
 An authentication demo for login patterns with FastAPI backend and HTMX frontend integration.
 This project demonstrates password-based login, magic link authentication, and password reset.
 
+![FastAPI + HTMX login form](./docs/images/screen.png)
+
 ## ✨ Features
 
 | Feature | Description | Security |
@@ -30,6 +32,7 @@ This project demonstrates password-based login, magic link authentication, and p
    ```
 
 2. **Using Make**
+- `make start` — Start the application.
 - `make dev` — Sync dev dependencies via uv.
 - `make install` — Install locked deps with uv.
 - `make lint` / `make fix` — Lint and auto-fix with Ruff.

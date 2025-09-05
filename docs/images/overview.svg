@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="300" viewBox="0 0 880 300" role="img" aria-labelledby="title desc">
+  <title id="title">FastAPI HTMX Login Architecture</title>
+  <desc id="desc">HTMX browser interacts with FastAPI; FastAPI renders Jinja templates, issues JWT, and sends emails via SMTP.</desc>
+  <defs>
+    <style>
+      .box { fill:#fff; stroke:#0ea5e9; stroke-width:2; rx:10; }
+      .label { font: 14px system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill:#111827; }
+      .small { font: 12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif; fill:#374151; }
+      .arrow { stroke:#111827; stroke-width:2; marker-end:url(#arrowhead); }
+      .pill { fill:#f0f9ff; stroke:#7dd3fc; rx:8; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#111827" />
+    </marker>
+  </defs>
+
+  <!-- Client -->
+  <rect class="box" x="30" y="60" width="200" height="100" />
+  <text class="label" x="130" y="95" text-anchor="middle">Browser</text>
+  <text class="small" x="130" y="120" text-anchor="middle">HTMX requests (POST/GET)</text>
+
+  <!-- FastAPI -->
+  <rect class="box" x="320" y="40" width="240" height="220" />
+  <text class="label" x="440" y="75" text-anchor="middle">FastAPI</text>
+  <rect class="pill" x="340" y="95" width="200" height="34" />
+  <text class="small" x="440" y="116" text-anchor="middle">Jinja2 templates (login / welcome)</text>
+  <rect class="pill" x="340" y="140" width="200" height="34" />
+  <text class="small" x="440" y="161" text-anchor="middle">JWT issue/verify</text>
+  <rect class="pill" x="340" y="185" width="200" height="34" />
+  <text class="small" x="440" y="206" text-anchor="middle">Magic link + reset emails</text>
+
+  <!-- SMTP / Mailcatcher -->
+  <rect class="box" x="640" y="60" width="210" height="100" />
+  <text class="label" x="745" y="95" text-anchor="middle">SMTP (Mailcatcher)</text>
+  <text class="small" x="745" y="120" text-anchor="middle">localhost:1025 / UI: 1080</text>
+
+  <!-- Arrows -->
+  <line class="arrow" x1="230" y1="110" x2="320" y2="110" />
+  <line class="arrow" x1="560" y1="110" x2="640" y2="110" />
+
+  <!-- Notes -->
+  <text class="small" x="130" y="200" text-anchor="middle">Cookies: HTTP-only</text>
+  <text class="small" x="745" y="200" text-anchor="middle">MJML → HTML templates</text>
+</svg>
+
