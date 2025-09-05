@@ -17,6 +17,13 @@ This project demonstrates password-based login, magic link authentication, and p
 | **📧 Email Templates** | Professional MJML email templates | Responsive design |
 
 
+## Roadmap
+
+- [ ] welcome screen style + logout button
+- [ ] reset password form
+- [ ] other login auth methods
+
+
 ## 🚀 Quick Start
 
 ### Prerequisites
