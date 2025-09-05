@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[pre-commit] Running lint, format-check, and tests..."
+
+run() {
+  if command -v uv >/dev/null 2>&1; then
+    uv run "$@"
+  else
+    "$@"
+  fi
+}
+
+# Ensure required tools exist when uv is not available
+if ! command -v uv >/dev/null 2>&1; then
+  for tool in ruff pytest; do
+    if ! command -v "$tool" >/dev/null 2>&1; then
+      echo "[pre-commit] Missing tool: $tool. Install dev deps (e.g., 'uv sync --dev' or 'pip install ruff pytest')." >&2
+      exit 1
+    fi
+  done
+fi
+
+echo "[pre-commit] Ruff check"
+run ruff check .
+
+echo "[pre-commit] Ruff format (check only)"
+run ruff format . --check
+
+echo "[pre-commit] Pytest"
+run pytest -q
+
+echo "[pre-commit] All checks passed. Proceeding with commit."
+exit 0
+

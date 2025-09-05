@@ -1,0 +1,11 @@
+{% extends "index.html" %} {% block head_extra %} {% endblock %} {% block
+content %}
+
+<div class="flex items-center justify-center min-h-screen">
+  <div id="header"><button>logout</button></div>
+  <div id="content">
+    <h1>Welcome, {{ user }}!</h1>
+    <p>You have successfully logged in.</p>
+  </div>
+</div>
+{% endblock %}

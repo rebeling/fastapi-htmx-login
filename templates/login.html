@@ -1,0 +1,158 @@
+{% extends "index.html" %} {% block head_extra %}
+<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+/>
+<link
+  href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css"
+  rel="stylesheet"
+  type="text/css"
+/>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  #email:invalid {
+    border-color: red;
+  }
+</style>
+
+{% endblock %} {% block content %}
+
+<div class="flex items-center justify-center min-h-screen" id="login-container">
+  <fieldset
+    class="card glass border-base-300 rounded-box border p-4 w-full max-w-md"
+  >
+    <div class="card-body">
+      <h2 class="text-2xl font-bold text-center">Welcome</h2>
+      <div id="response-container" class="mt-4">
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+      </div>
+
+      <div class="form-group form-control mt-4">
+        <label for="username"></label>
+        <input
+          class="input input-bordered rounded-none glass"
+          type="email"
+          id="username"
+          name="username"
+          placeholder="Email Address"
+          required
+          autofocus
+        />
+        <!--onblur="validateEmail()"-->
+      </div>
+
+      <div class="form-group">
+        <label for="password"></label>
+        <div class="password-container form-control mt-4">
+          <input
+            class="input input-bordered rounded-none glass"
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Password"
+            required
+          />
+          <i
+            class="fas fa-eye toggle-password absolute right-[66px] translate-y-[100%] cursor-pointer"
+            onclick="togglePasswordVisibility()"
+          ></i>
+        </div>
+      </div>
+
+      <!-- forgot password UI -->
+      <div id="forgot-container" class="ml-1" aria-live="polite">
+        <a
+          class="link link-hover text-sm font-bold"
+          href="/forgot-password"
+          hx-get="/forgot-password/fragment"
+          hx-target="#forgot-container"
+          hx-swap="outerHTML"
+        >
+          Forgot Password?
+        </a>
+      </div>
+
+      <div class="button-group form-control mt-4">
+        <button
+          class="btn btn-soft btn-primary rounded-lg"
+          hx-post="/login"
+          hx-include="[name='username'], [name='password']"
+          hx-target="#response-container"
+          hx-swap="innerHTML"
+          hx-on="htmx:beforeRequest: if (!validateEmail()) { event.preventDefault(); }"
+        >
+          Login with Password
+        </button>
+        <div class="divider">OR</div>
+
+        <button
+          class="btn btn-soft btn-secondary rounded-lg"
+          onclick="sendMagicLink(event)"
+        >
+          <i class="fas fa-link"></i> Send Magic Link
+        </button>
+      </div>
+    </div>
+  </fieldset>
+</div>
+
+<script>
+  function togglePasswordVisibility() {
+    const passwordInput = document.getElementById("password");
+    const icon = document.querySelector(".toggle-password");
+    if (passwordInput.type === "password") {
+      passwordInput.type = "text";
+      icon.classList.remove("fa-eye");
+      icon.classList.add("fa-eye-slash");
+    } else {
+      passwordInput.type = "password";
+      icon.classList.remove("fa-eye-slash");
+      icon.classList.add("fa-eye");
+    }
+  }
+
+  function validateEmail() {
+    const emailInput = document.getElementById("username");
+    if (!emailInput.value) {
+      emailInput.classList.add("invalid");
+      document.getElementById("response-container").innerHTML =
+        '<div class="error">Email is required.</div>';
+      return false;
+    }
+    const isValid = emailInput.checkValidity();
+    if (isValid) {
+      emailInput.classList.remove("invalid");
+    } else {
+      emailInput.classList.add("invalid");
+      document.getElementById("response-container").innerHTML =
+        '<div class="error">Invalid email address.</div>';
+    }
+    return isValid;
+  }
+
+  function sendMagicLink(event) {
+    event.preventDefault();
+    if (!validateEmail()) return;
+
+    htmx.ajax("POST", "/magic-login", {
+      target: "#response-container",
+      swap: "innerHTML",
+      values: { username: document.getElementById("username").value },
+    });
+  }
+
+  function sendResetLink(event) {
+    event.preventDefault();
+    if (!validateEmail()) return;
+
+    htmx.ajax("POST", "/forgot-password", {
+      target: "#forgot-container",
+      swap: "innerHTML",
+      values: { username: document.getElementById("username").value },
+    });
+  }
+</script>
+{% endblock %}
