@@ -5,8 +5,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from pydantic import EmailStr
 
+import app.cognito.mails as mails
 from app.cognito.htmx import htmx_message
-from app.cognito.mails import send_magic_link_email
 from app.cognito.token import create_access_token, decode_token
 from config import USERS
 
@@ -51,15 +51,20 @@ async def forgot_password_fragment():
 
 
 @router.post("/forgot-password", response_class=HTMLResponse)
-async def forgot_password(request: Request, background: BackgroundTasks, email: str = Form(None)):
-    if not email:
+async def forgot_password(
+    request: Request,
+    background: BackgroundTasks,
+    # Support both field names: tests send `email`, UI sends `username`
+    email: str | None = Form(default=None),
+    username: str | None = Form(default=None),
+):
+    email_value = email or username
+    if not email_value:
         return htmx_message("Email is required.")
 
     try:
         # Send email in the background (use your mailer)
-        from app.cognito.mails import send_password_reset_email
-
-        background.add_task(send_password_reset_email, str(email), request)
+        background.add_task(mails.send_password_reset_email, str(email_value), request)
     except Exception:
         # Intentionally ignore to avoid leaking information
         pass
@@ -80,7 +85,7 @@ async def login_magic_link(
 
     if user:
         # Send the email (in background so the response is snappy)
-        background.add_task(send_magic_link_email, str(username), request)
+        background.add_task(mails.send_magic_link_email, str(username), request)
 
     return htmx_message("If the email exists, a magic link has been sent.")
 
