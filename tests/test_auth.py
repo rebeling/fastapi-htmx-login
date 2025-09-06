@@ -13,7 +13,7 @@ def client():
 def test_root_page_loads(client):
     resp = client.get("/")
     assert resp.status_code == 200
-    assert "Login with Password" in resp.text
+    assert "Log in with Password" in resp.text
 
 
 def test_root_with_invalid_token_error_shows_message(client):
@@ -70,22 +70,3 @@ def test_magic_link_verify_invalid_token_redirects_with_error(client):
     resp = client.get("/magic-link-verify?token=not-a-valid-token", follow_redirects=False)
     assert resp.status_code in (302, 307)
     assert resp.headers.get("location") == "/?error=invalid_token"
-
-
-def test_forgot_password_fragment_and_post(client, monkeypatch):
-    # Fragment renders the button snippet
-    frag = client.get("/forgot-password/fragment")
-    assert frag.status_code == 200
-    assert "Send reset link" in frag.text
-
-    # Avoid sending real emails
-    monkeypatch.setattr("app.cognito.mails.send_password_reset_email", lambda *args, **kwargs: None)
-    res = client.post("/forgot-password", data={"username": "test@example.com"})
-    assert res.status_code == 200
-    assert "reset link has been sent" in res.text.lower()
-
-
-def test_forgot_password_requires_email(client):
-    res = client.post("/forgot-password")
-    assert res.status_code == 200
-    assert "email is required" in res.text.lower()

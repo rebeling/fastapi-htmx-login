@@ -1,11 +1,30 @@
-{% extends "index.html" %} {% block head_extra %} {% endblock %} {% block
-content %}
-
-<div class="flex items-center justify-center min-h-screen">
-  <div id="header"><button>logout</button></div>
-  <div id="content">
-    <h1>Welcome, {{ user }}!</h1>
-    <p>You have successfully logged in.</p>
+{% extends "index.html" %} {% block head_extra %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+/>
+{% endblock %} {% block content %}
+<div class="min-h-screen flex justify-center">
+  <div
+    class="w-full max-w-[1000px] my-8 mx-4 shadow-xl bg-base-100/90 overflow-hidden"
+  >
+    <div
+      class="navbar h-[50px] border-b border-base-200 bg-base-100 justify-end px-4"
+    >
+      <form method="post" action="/logout">
+        <button
+          type="submit"
+          class="btn btn-primary btn-sm gap-2"
+          title="Log out"
+        >
+          <i class="fas fa-right-from-bracket"></i>
+        </button>
+      </form>
+    </div>
+    <div class="p-6">
+      <h1 class="text-2xl font-semibold">Welcome user test</h1>
+      <p class="mt-2 text-base-content/70">Signed in as {{ user }}</p>
+    </div>
   </div>
 </div>
 {% endblock %}

@@ -16,12 +16,18 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def decode_token(token) -> tuple[bool, str | None]:
+def decode_token(token, expected_purpose: str | None = None) -> tuple[bool, str | None]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
+        purpose: str = payload.get("purpose")
+        
         if email is None:
             raise JWTError
+            
+        if expected_purpose and purpose != expected_purpose:
+            raise JWTError
+            
         return True, email
     except JWTError:
         return False, None
