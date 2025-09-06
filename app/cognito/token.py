@@ -21,13 +21,13 @@ def decode_token(token, expected_purpose: str | None = None) -> tuple[bool, str 
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         purpose: str = payload.get("purpose")
-        
+
         if email is None:
             raise JWTError
-            
+
         if expected_purpose and purpose != expected_purpose:
             raise JWTError
-            
+
         return True, email
     except JWTError:
         return False, None

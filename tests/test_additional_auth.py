@@ -3,8 +3,8 @@ from fastapi.testclient import TestClient
 
 from app.cognito.api.routes.login import htmx_message
 from app.cognito.token import create_access_token, decode_token
-from main import app
 from config import USERS
+from main import app
 
 
 @pytest.fixture()
@@ -31,9 +31,7 @@ def test_root_with_invalid_reset_token_shows_error(client):
 
 def test_forgot_password_accepts_username_and_succeeds(client, monkeypatch):
     # Avoid executing email-sending background task
-    monkeypatch.setattr(
-        "app.cognito.mails.send_password_reset_email", lambda *args, **kwargs: None
-    )
+    monkeypatch.setattr("app.cognito.mails.send_password_reset_email", lambda *args, **kwargs: None)
     resp = client.post("/forgot-password", data={"username": "user@example.com"})
     assert resp.status_code == 200
     assert "a reset link has been sent" in resp.text.lower()
@@ -127,14 +125,16 @@ def test_logout_deletes_cookie_and_redirects(client):
     assert resp.headers.get("location") == "/"
     # A Set-Cookie header removing the access_token is expected
     set_cookie = resp.headers.get("set-cookie", "")
-    assert "access_token=" in set_cookie and ("Max-Age=0" in set_cookie or "expires=" in set_cookie.lower())
+    assert "access_token=" in set_cookie and (
+        "Max-Age=0" in set_cookie or "expires=" in set_cookie.lower()
+    )
 
 
 def test_htmx_message_ok_and_error():
     r_ok = htmx_message("All good", ok=True)
-    assert r_ok.status_code == 200 and "class=\"ok\"" in r_ok.body.decode()
+    assert r_ok.status_code == 200 and 'class="ok"' in r_ok.body.decode()
     r_err = htmx_message("Oops", ok=False)
-    assert r_err.status_code == 200 and "class=\"error\"" in r_err.body.decode()
+    assert r_err.status_code == 200 and 'class="error"' in r_err.body.decode()
 
 
 def test_decode_token_purpose_mismatch_returns_false():

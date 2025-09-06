@@ -44,7 +44,7 @@ async def read_root(request: Request, error: str | None = None, reset_token: str
         "request": request,
         "error": error_message,
         "reset_token": reset_token,
-        "reset_email": reset_email
+        "reset_email": reset_email,
     }
     return templates.TemplateResponse("login.html", content)
 
@@ -59,7 +59,7 @@ async def login_password(
     if not user or user["password"] != password:
         return templates.TemplateResponse(
             "partials/error_message.html",
-            {"request": request, "message": "Invalid email or password."}
+            {"request": request, "message": "Invalid email or password."},
         )
 
     access_token = create_access_token(data={"sub": username})
@@ -90,7 +90,10 @@ async def forgot_password(
     # Then show success message in main response container
     return templates.TemplateResponse(
         "partials/success_message.html",
-        {"request": request, "message": "If an account exists for that address, a reset link has been sent."}
+        {
+            "request": request,
+            "message": "If an account exists for that address, a reset link has been sent.",
+        },
     )
 
 
@@ -107,7 +110,10 @@ async def login_magic_link(
 
     return templates.TemplateResponse(
         "partials/success_message.html",
-        {"request": request, "message": "If an account exists for that address, a magic link has been sent."}
+        {
+            "request": request,
+            "message": "If an account exists for that address, a magic link has been sent.",
+        },
     )
 
 
@@ -144,14 +150,14 @@ async def reset_password(
     if new_password != confirm_password:
         return templates.TemplateResponse(
             "partials/error_message.html",
-            {"request": request, "message": "Passwords do not match."}
+            {"request": request, "message": "Passwords do not match."},
         )
 
     success, email = decode_token(token, expected_purpose="password_reset")
     if not success:
         return templates.TemplateResponse(
             "partials/error_message.html",
-            {"request": request, "message": "Invalid or expired reset token."}
+            {"request": request, "message": "Invalid or expired reset token."},
         )
 
     # Update password in USERS dict
@@ -161,7 +167,11 @@ async def reset_password(
     # Return success response that triggers card flip back to login
     response = templates.TemplateResponse(
         "partials/success_message.html",
-        {"request": request, "message": "Password updated successfully! Please login with your new password.", "email": email}
+        {
+            "request": request,
+            "message": "Password updated successfully! Please login with your new password.",
+            "email": email,
+        },
     )
     response.headers["HX-Trigger"] = "passwordResetSuccess"
     return response
