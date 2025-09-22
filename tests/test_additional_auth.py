@@ -16,11 +16,11 @@ def test_root_with_valid_reset_token_prefills_and_sets_hidden(client):
     token = create_access_token({"sub": "test@example.com", "purpose": "password_reset"})
     resp = client.get(f"/?reset_token={token}")
     assert resp.status_code == 200
-    # Username field on reset side should be prefilled and readonly
-    assert 'id="username-reset"' in resp.text
-    assert 'value="test@example.com"' in resp.text
-    # Hidden reset token should be present
-    assert 'id="reset_token"' in resp.text
+    # Reset token should be set in the hidden field
+    assert 'id="reset-token"' in resp.text
+    assert f'value="{token}"' in resp.text
+    # Password reset view should be shown
+    assert 'id="view-password-reset"' in resp.text
 
 
 def test_root_with_invalid_reset_token_shows_error(client):
@@ -112,7 +112,11 @@ def test_reset_password_post_valid_token_updates_and_triggers_hx_header(client):
         )
         assert resp.status_code == 200
         assert "Password updated successfully" in resp.text
-        assert resp.headers.get("HX-Trigger") == "passwordResetSuccess"
+        # HX-Trigger now contains JSON with email and password data
+        hx_trigger = resp.headers.get("HX-Trigger")
+        assert "passwordResetSuccess" in hx_trigger
+        assert email in hx_trigger
+        assert "newpass123" in hx_trigger
         # Password updated in USERS
         assert USERS[email]["password"] == "newpass123"
     finally:

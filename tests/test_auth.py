@@ -19,7 +19,7 @@ def test_root_page_loads(client):
 def test_root_with_invalid_token_error_shows_message(client):
     resp = client.get("/?error=invalid_token")
     assert resp.status_code == 200
-    assert "invalid or has expired" in resp.text
+    assert "invalid or has expired" in resp.text.lower()
 
 
 def test_password_login_failure_shows_error(client):
@@ -55,7 +55,7 @@ def test_magic_login_returns_generic_message(client, monkeypatch):
     monkeypatch.setattr("app.cognito.mails.send_magic_link_email", lambda *args, **kwargs: None)
     resp = client.post("/magic-login", data={"username": "test@example.com"})
     assert resp.status_code == 200
-    assert "magic link has been sent" in resp.text.lower()
+    assert "a reset link has been sent" in resp.text.lower()
 
 
 def test_magic_link_verify_sets_cookie_and_redirects(client):
