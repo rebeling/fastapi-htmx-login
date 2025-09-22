@@ -1,13 +1,15 @@
+import asyncio
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from pydantic import EmailStr
+from pydantic.networks import MAX_EMAIL_LENGTH
 
 import app.cognito.mails as mails
 from app.cognito.token import create_access_token, decode_token
-from config import USERS
+from config import USERS, MAIL_SEND_MESSAGE
 
 router = APIRouter(tags=["login"])
 
@@ -78,23 +80,16 @@ async def forgot_password(
     form = await request.form()
     email_value = (form.get("email") or form.get("username") or "").strip()
     try:
-        # Send email in the background (use your mailer)
-        background.add_task(mails.send_password_reset_email, str(email_value), request)
+        if USERS.get(email_value):
+            # Send email in the background if user exists (use your mailer)
+            background.add_task(mails.send_password_reset_email, str(email_value), request)
     except Exception:
         # Intentionally ignore to avoid leaking information
         pass
 
     # Return the same message regardless of existence
     # Always respond the same to avoid user enumeration
-
-    # Then show success message in main response container
-    return templates.TemplateResponse(
-        "partials/success_message.html",
-        {
-            "request": request,
-            "message": "If an account exists for that address, a reset link has been sent.",
-        },
-    )
+    return htmx_message(MAIL_SEND_MESSAGE)
 
 
 @router.post("/magic-login", response_class=HTMLResponse)
@@ -108,13 +103,7 @@ async def login_magic_link(
         # Send the email (in background so the response is snappy)
         background.add_task(mails.send_magic_link_email, str(username), request)
 
-    return templates.TemplateResponse(
-        "partials/success_message.html",
-        {
-            "request": request,
-            "message": "If an account exists for that address, a magic link has been sent.",
-        },
-    )
+    return htmx_message(MAIL_SEND_MESSAGE)
 
 
 @router.get("/magic-link-verify")
