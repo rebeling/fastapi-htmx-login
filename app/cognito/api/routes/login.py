@@ -1,15 +1,13 @@
-import asyncio
 from typing import Annotated
 
 from fastapi import APIRouter, BackgroundTasks, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 from pydantic import EmailStr
-from pydantic.networks import MAX_EMAIL_LENGTH
 
 import app.cognito.mails as mails
 from app.cognito.token import create_access_token, decode_token
-from config import USERS, MAIL_SEND_MESSAGE
+from config import MAIL_SEND_MESSAGE, USERS
 
 router = APIRouter(tags=["login"])
 
@@ -153,7 +151,7 @@ async def reset_password(
     if email in USERS:
         USERS[email]["password"] = new_password
 
-    # Return success response that triggers card flip back to login
+    # Return success response that triggers card flip back to login with prefilled data
     response = templates.TemplateResponse(
         "partials/success_message.html",
         {
@@ -162,7 +160,11 @@ async def reset_password(
             "email": email,
         },
     )
-    response.headers["HX-Trigger"] = "passwordResetSuccess"
+    # Include both email and new password in the trigger data for frontend use
+    import json
+
+    trigger_data = json.dumps({"email": email, "password": new_password})
+    response.headers["HX-Trigger"] = f'{{"passwordResetSuccess": {trigger_data}}}'
     return response
 
 

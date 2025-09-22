@@ -7,6 +7,12 @@
         <!-- ===== LOGIN VIEW ===== -->
         <section id="view-login" data-view>
           <h2 class="text-2xl font-bold text-center mb-8">Welcome</h2>
+          
+          {% if error %}
+          <div class="alert alert-error mb-4">
+            <span>{{ error }}</span>
+          </div>
+          {% endif %}
 
           <form
             id="auth-form"
@@ -172,12 +178,12 @@
               value="{{ reset_token or '' }}"
             />
 
-            <div class="form-group form-control mb-4">
+            <div class="form-group form-control mb-4 relative">
               <label for="new-password" class="label sr-only"
                 >New Password</label
               >
               <input
-                class="input input-bordered rounded-none glass w-full"
+                class="input input-bordered rounded-none glass w-full pr-12"
                 type="password"
                 id="new-password"
                 name="new_password"
@@ -186,14 +192,30 @@
                 required
                 autofocus
               />
+              <i
+                class="fas fa-eye toggle-password absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                aria-label="Toggle new password visibility"
+                onclick="
+                      (function(p, icon){
+                        if (p.type === 'password') {
+                          p.type = 'text';
+                          icon.classList.remove('fa-eye');
+                          icon.classList.add('fa-eye-slash');
+                        } else {
+                          p.type = 'password';
+                          icon.classList.remove('fa-eye-slash');
+                          icon.classList.add('fa-eye');
+                        }
+                      })(document.getElementById('new-password'), this)"
+              ></i>
             </div>
 
-            <div class="form-group form-control mb-6">
+            <div class="form-group form-control mb-6 relative">
               <label for="confirm-password" class="label sr-only"
                 >Confirm Password</label
               >
               <input
-                class="input input-bordered rounded-none glass w-full"
+                class="input input-bordered rounded-none glass w-full pr-12"
                 type="password"
                 id="confirm-password"
                 name="confirm_password"
@@ -201,6 +223,22 @@
                 minlength="8"
                 required
               />
+              <i
+                class="fas fa-eye toggle-password absolute right-3 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                aria-label="Toggle confirm password visibility"
+                onclick="
+                      (function(p, icon){
+                        if (p.type === 'password') {
+                          p.type = 'text';
+                          icon.classList.remove('fa-eye');
+                          icon.classList.add('fa-eye-slash');
+                        } else {
+                          p.type = 'password';
+                          icon.classList.remove('fa-eye-slash');
+                          icon.classList.add('fa-eye');
+                        }
+                      })(document.getElementById('confirm-password'), this)"
+              ></i>
             </div>
 
             <div class="form-group form-control">
@@ -303,15 +341,36 @@
     }
   });
 
-  // Listen for successful password reset and switch back to login view
+  // Listen for successful password reset and switch back to login view with prefilled data
   document.body.addEventListener("htmx:afterRequest", function (event) {
-    if (
-      event.detail.xhr.getResponseHeader("HX-Trigger") ===
-      "passwordResetSuccess"
-    ) {
-      setTimeout(function () {
-        toggleView("login");
-      }, 2000); // Show success message for 2 seconds, then switch to login
+    const hxTrigger = event.detail.xhr.getResponseHeader("HX-Trigger");
+    if (hxTrigger && hxTrigger.includes("passwordResetSuccess")) {
+      try {
+        // Parse the trigger data to get email and password
+        const triggerData = JSON.parse(hxTrigger);
+        const resetData = triggerData.passwordResetSuccess;
+        
+        setTimeout(function () {
+          toggleView("login");
+          
+          // Prefill the login form with email and new password
+          if (resetData && resetData.email && resetData.password) {
+            const loginEmail = document.getElementById("login-username");
+            const loginPassword = document.getElementById("login-password");
+            
+            if (loginEmail) loginEmail.value = resetData.email;
+            if (loginPassword) loginPassword.value = resetData.password;
+            
+            // Focus on the login button or email field for better UX
+            if (loginEmail) loginEmail.focus();
+          }
+        }, 2000); // Show success message for 2 seconds, then switch to login
+      } catch (e) {
+        // Fallback to old behavior if JSON parsing fails
+        setTimeout(function () {
+          toggleView("login");
+        }, 2000);
+      }
     }
   });
 </script>
