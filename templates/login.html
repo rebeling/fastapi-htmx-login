@@ -1,486 +1,317 @@
-{% extends "index.html" %} {% block head_extra %}
-<script src="https://unpkg.com/htmx.org@1.9.10"></script>
-<link
-  rel="stylesheet"
-  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
-/>
-<link
-  href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css"
-  rel="stylesheet"
-  type="text/css"
-/>
-<script src="https://cdn.tailwindcss.com"></script>
-<style></style>
-{% endblock %} {% block content %}
-
+{% extends "index.html" %} {% block head_extra %}{% endblock %} {% block content
+%}
 <div class="flex items-center justify-center min-h-screen" id="login-container">
-  <div class="flip-card w-full max-w-md">
-    <div class="flip-card-inner">
-      <!-- FRONT SIDE - Login Form -->
-      <div class="flip-card-front">
-        <fieldset class="card glass border-base-300 rounded-box border p-4">
-          <div class="card-body">
-            <h2 class="text-2xl font-bold text-center">Welcome</h2>
+  <div class="w-full max-w-md">
+    <fieldset class="card glass border-base-300 rounded-box border p-4">
+      <div class="card-body">
+        <!-- ===== LOGIN VIEW ===== -->
+        <section id="view-login" data-view>
+          <h2 class="text-2xl font-bold text-center mb-8">Welcome</h2>
 
-            <!-- Frontend validation messages -->
-            <div id="response-frontend" class="mt-4 text-center hidden">
-              <div role="alert" class="alert alert-error error">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-6 w-6 shrink-0 stroke-current"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span id="frontend-error-message">{{ error }} Error</span>
-              </div>
+          <form
+            id="auth-form"
+            hx-post="/login"
+            hx-target="#login-response"
+            hx-swap="innerHTML"
+            hx-on:submit="clearOtherResponses('login-response')"
+          >
+            <div class="form-control mb-4">
+              <input
+                class="input input-bordered rounded-none glass w-full"
+                id="login-username"
+                name="username"
+                type="email"
+                placeholder="Email Address"
+                autocomplete="email"
+                required
+              />
             </div>
 
-            <!-- Server response messages -->
-            <div id="response-container" class="mt-4 text-center"></div>
-
-            <div class="form-group form-control mt-4">
-              <label for="username"></label>
+            <div class="form-control mb-2">
               <input
-                class="input input-bordered rounded-none glass"
+                class="input input-bordered rounded-none glass w-full"
+                id="login-password"
+                name="password"
+                type="password"
+                placeholder="Password"
+                autocomplete="current-password"
+                minlength="8"
+                required
+              />
+              <i
+                class="fas fa-eye toggle-password absolute right-[66px] translate-y-[100%] cursor-pointer"
+                aria-label="Toggle password visibility"
+                onclick="
+                      (function(p, icon){
+                        if (p.type === 'password') {
+                          p.type = 'text';
+                          icon.classList.remove('fa-eye');
+                          icon.classList.add('fa-eye-slash');
+                        } else {
+                          p.type = 'password';
+                          icon.classList.remove('fa-eye-slash');
+                          icon.classList.add('fa-eye');
+                        }
+                      })(document.getElementById('login-password'), this)"
+              ></i>
+            </div>
+
+            <div id="forgot-container" class="ml-1 mb-4" aria-live="polite">
+              <a
+                class="link link-hover text-sm font-bold"
+                onclick="toggleView('reset')"
+              >
+                Forgot Password?
+              </a>
+            </div>
+
+            <button
+              type="submit"
+              class="btn btn-primary rounded-lg w-full mt-3"
+            >
+              <i class="fas fa-right-to-bracket"></i>
+              Log in with Password
+            </button>
+
+            <!-- Server response target for LOGIN only -->
+            <div id="login-response" class="mt-2 text-center"></div>
+          </form>
+
+          <div class="divider">OR</div>
+
+          <!-- Magic link: outside the form; include only the email field -->
+          <button
+            type="button"
+            class="btn btn-secondary rounded-lg w-full"
+            hx-post="/magic-login"
+            hx-include="#login-username"
+            hx-params="username"
+            hx-indicator="#login-indicator"
+            hx-on:click="
+              const e = document.getElementById('login-username');
+              if (!e.checkValidity()) { e.reportValidity(); event.preventDefault(); }
+              clearOtherResponses('magic-response');
+            "
+            hx-target="#magic-response"
+            hx-swap="innerHTML"
+          >
+            <i class="fas fa-link"></i> Send Magic Link
+          </button>
+
+          <div id="magic-response" class="mt-2 text-center"></div>
+        </section>
+
+        <!-- ===== RESET VIEW ===== -->
+        <section id="view-reset" data-view class="hidden">
+          <h2 class="text-2xl font-bold text-center mb-4">Forgot Password</h2>
+
+          <p class="text-center mb-8">
+            Enter your email address and we'll send you a link to reset your
+            password.
+          </p>
+
+          <form
+            class="mt-4 space-y-4"
+            hx-post="/forgot-password"
+            hx-target="#reset-response"
+            hx-swap="innerHTML"
+            hx-on:submit="clearOtherResponses('reset-response')"
+          >
+            <div class="form-group form-control mb-6">
+              <label for="reset-username" class="label sr-only"
+                >Email Address</label
+              >
+              <input
+                class="input input-bordered rounded-none glass w-full"
                 type="email"
-                id="username"
+                id="reset-username"
                 name="username"
                 placeholder="Email Address"
                 required
                 autofocus
-                {%
-                if
-                reset_email
-                %}value="{{ reset_email }}"
-                readonly{%
-                endif
-                %}
               />
-              <!--onblur="validateEmail()"-->
             </div>
 
-            <!-- Normal password field for login -->
-            <div class="form-group">
-              <label for="password"></label>
-              <div class="password-container form-control mt-4">
-                <input
-                  class="input input-bordered rounded-none glass"
-                  type="password"
-                  id="password"
-                  name="password"
-                  placeholder="Password"
-                  required
-                />
-                <i
-                  class="fas fa-eye toggle-password absolute right-[66px] translate-y-[100%] cursor-pointer"
-                  onclick="togglePasswordVisibility()"
-                ></i>
-              </div>
-            </div>
-
-            <!-- forgot password UI -->
-            <div id="forgot-container" class="ml-1" aria-live="polite">
-              <a
-                class="link link-hover text-sm font-bold"
-                onclick="forgotPassword(event)"
-              >
-                Forgot Password?
-              </a>
-              <div
-                id="sendResetLink"
-                class="button-group form-control mt-4 hidden"
-              >
-                <p id="sendResetLink-hint"></p>
-                <button
-                  class="btn btn-soft btn-primary rounded-lg"
-                  onclick="sendResetLink(event)"
-                >
-                  <i class="fas fa-link"></i> Send reset link
-                </button>
-                <div class="divider">OR</div>
-              </div>
-            </div>
-
-            <!-- Login buttons -->
-            <div class="button-group form-control mt-4">
-              <button
-                class="btn btn-soft btn-primary rounded-lg"
-                onclick="loginWithPassword(event)"
-              >
-                Log in with Password
-              </button>
-              <div class="divider">OR</div>
-
-              <button
-                class="btn btn-soft btn-secondary rounded-lg"
-                onclick="sendMagicLink(event)"
-              >
-                <i class="fas fa-link"></i> Send Magic Link
+            <div class="form-group form-control">
+              <button class="btn btn-primary rounded-lg w-full" type="submit">
+                <i class="fas fa-link"></i> Send reset link
               </button>
             </div>
-          </div>
-        </fieldset>
+
+            <!-- Server response target for RESET only -->
+            <div id="reset-response" class="mt-2 text-center"></div>
+          </form>
+
+          <div class="divider">OR</div>
+          <button
+            class="btn rounded-lg w-full"
+            type="button"
+            onclick="toggleView('login')"
+          >
+            Back to Login
+          </button>
+        </section>
+
+        <!-- ===== PASSWORD RESET VIEW ===== -->
+        <section id="view-password-reset" data-view class="hidden">
+          <h2 class="text-2xl font-bold text-center mb-4">Reset Password</h2>
+
+          <p class="text-center mb-8">Enter your new password below.</p>
+
+          <form
+            class="mt-4 space-y-4"
+            hx-post="/reset-password"
+            hx-target="#password-reset-response"
+            hx-swap="innerHTML"
+            hx-on:submit="clearOtherResponses('password-reset-response')"
+          >
+            <input
+              type="hidden"
+              id="reset-token"
+              name="token"
+              value="{{ reset_token or '' }}"
+            />
+
+            <div class="form-group form-control mb-4">
+              <label for="new-password" class="label sr-only"
+                >New Password</label
+              >
+              <input
+                class="input input-bordered rounded-none glass w-full"
+                type="password"
+                id="new-password"
+                name="new_password"
+                placeholder="New Password"
+                minlength="8"
+                required
+                autofocus
+              />
+            </div>
+
+            <div class="form-group form-control mb-6">
+              <label for="confirm-password" class="label sr-only"
+                >Confirm Password</label
+              >
+              <input
+                class="input input-bordered rounded-none glass w-full"
+                type="password"
+                id="confirm-password"
+                name="confirm_password"
+                placeholder="Confirm New Password"
+                minlength="8"
+                required
+              />
+            </div>
+
+            <div class="form-group form-control">
+              <button class="btn btn-primary rounded-lg w-full" type="submit">
+                <i class="fas fa-key"></i> Update Password
+              </button>
+            </div>
+
+            <!-- Server response target for PASSWORD RESET only -->
+            <div id="password-reset-response" class="mt-2 text-center"></div>
+          </form>
+
+          <div class="divider">OR</div>
+          <button
+            class="btn rounded-lg w-full"
+            type="button"
+            onclick="toggleView('login')"
+          >
+            Back to Login
+          </button>
+        </section>
       </div>
-
-      <!-- BACK SIDE - Reset Password Form -->
-      <div class="reset-form hidden">
-        <div class="flex items-center justify-center min-h-screen">
-          <div class="w-full max-w-md">
-            <fieldset class="card glass border-base-300 rounded-box border p-4">
-              <div class="card-body">
-                <h2 class="text-2xl font-bold text-center">Reset Password</h2>
-
-                <!-- Frontend validation messages for reset -->
-                <div
-                  id="response-frontend-reset"
-                  class="mt-4 text-center hidden"
-                >
-                  <div role="alert" class="alert alert-error error">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="h-6 w-6 shrink-0 stroke-current"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <span id="frontend-error-message-reset">Error</span>
-                  </div>
-                </div>
-
-                <!-- Server response messages for reset -->
-                <div
-                  id="response-container-reset"
-                  class="mt-4 text-center"
-                ></div>
-
-                <!-- Username field for reset -->
-                <div class="form-group form-control mt-4">
-                  <label for="username-reset"></label>
-                  <input
-                    class="input input-bordered rounded-none glass"
-                    type="email"
-                    id="username-reset"
-                    name="username"
-                    placeholder="Email Address"
-                    required
-                    {%
-                    if
-                    reset_email
-                    %}value="{{ reset_email }}"
-                    readonly{%
-                    endif
-                    %}
-                  />
-                </div>
-
-                <!-- Password reset fields -->
-                <div class="form-group">
-                  <div class="form-control mt-4">
-                    <input
-                      class="input input-bordered rounded-none glass"
-                      type="password"
-                      id="new_password"
-                      name="new_password"
-                      placeholder="New Password"
-                      required
-                    />
-                  </div>
-                  <div class="form-control mt-4">
-                    <input
-                      class="input input-bordered rounded-none glass"
-                      type="password"
-                      id="confirm_password"
-                      name="confirm_password"
-                      placeholder="Confirm New Password"
-                      required
-                    />
-                  </div>
-                  <input
-                    type="hidden"
-                    id="reset_token"
-                    name="token"
-                    value="{{ reset_token or '' }}"
-                  />
-                </div>
-
-                <!-- Reset password buttons -->
-                <div class="button-group form-control mt-4">
-                  <button
-                    class="btn btn-soft btn-primary rounded-lg"
-                    onclick="resetPassword(event)"
-                  >
-                    <i class="fas fa-key"></i> Update Password
-                  </button>
-                  <div class="divider">OR</div>
-                  <button
-                    class="btn btn-soft btn-secondary rounded-lg"
-                    onclick="cancelReset(event)"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </fieldset>
-          </div>
-        </div>
-      </div>
-    </div>
+    </fieldset>
   </div>
 </div>
 
 <script>
-  function togglePasswordVisibility() {
-    const passwordInput = document.getElementById("password");
-    const icon = document.querySelector(".toggle-password");
-    if (passwordInput.type === "password") {
-      passwordInput.type = "text";
-      icon.classList.remove("fa-eye");
-      icon.classList.add("fa-eye-slash");
-    } else {
-      passwordInput.type = "password";
-      icon.classList.remove("fa-eye-slash");
-      icon.classList.add("fa-eye");
+  // Clear other response containers when performing a different action
+  function clearOtherResponses(keepContainer) {
+    const containers = [
+      "login-response",
+      "magic-response",
+      "reset-response",
+      "password-reset-response",
+    ];
+    containers.forEach((id) => {
+      if (id !== keepContainer) {
+        const container = document.getElementById(id);
+        if (container) container.innerHTML = "";
+      }
+    });
+  }
+
+  // Minimal view toggle (no DOM rewrites; htmx handles requests/responses)
+  function toggleView(which) {
+    const views = document.querySelectorAll("[data-view]");
+    views.forEach((v) => v.classList.add("hidden"));
+    const el = document.getElementById(`view-${which}`);
+    if (el) el.classList.remove("hidden");
+
+    // Transfer email between views
+    if (which === "reset") {
+      // Transfer email from login to reset view
+      const loginEmail = document.getElementById("login-username");
+      const resetEmail = document.getElementById("reset-username");
+      if (loginEmail && resetEmail && loginEmail.value) {
+        resetEmail.value = loginEmail.value;
+      }
+    } else if (which === "login") {
+      // Transfer email from reset to login view
+      const resetEmail = document.getElementById("reset-username");
+      const loginEmail = document.getElementById("login-username");
+      if (resetEmail && loginEmail && resetEmail.value) {
+        loginEmail.value = resetEmail.value;
+      }
     }
   }
 
-  function validateEmail() {
-    const emailInput = document.getElementById("username");
-    if (!emailInput.value) {
-      emailInput.classList.add("invalid");
-      document.getElementById("response-frontend").classList.remove("hidden");
-      document.getElementById("frontend-error-message").innerHTML =
-        "Email is required.";
-      return false;
-    }
+  // Validate password matching for reset form
+  function validatePasswordMatch() {
+    const newPassword = document.getElementById("new-password");
+    const confirmPassword = document.getElementById("confirm-password");
 
-    // Use both HTML5 validation and regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const isValid =
-      emailInput.checkValidity() && emailRegex.test(emailInput.value);
-
-    if (isValid) {
-      emailInput.classList.remove("invalid");
-      document.getElementById("response-frontend").classList.add("hidden");
-    } else {
-      emailInput.classList.add("invalid");
-      document.getElementById("response-frontend").classList.remove("hidden");
-      document.getElementById("frontend-error-message").innerHTML =
-        "Invalid email address.";
-    }
-    return isValid;
-  }
-  function validatePassword() {
-    const passwordInput = document.getElementById("password");
-    if (!passwordInput.value) {
-      document.getElementById("response-frontend").classList.remove("hidden");
-      document.getElementById("frontend-error-message").innerHTML =
-        "Password is required.";
-      return false;
+    if (newPassword && confirmPassword) {
+      if (newPassword.value !== confirmPassword.value) {
+        confirmPassword.setCustomValidity("Passwords do not match");
+        return false;
+      } else {
+        confirmPassword.setCustomValidity("");
+        return true;
+      }
     }
     return true;
   }
 
-  function forgotPassword(event) {
-    event.preventDefault();
-    resetMessages();
-
-    const sendResetLinkDiv = document.getElementById("sendResetLink");
-    if (sendResetLinkDiv.classList.contains("hidden")) {
-      sendResetLinkDiv.classList.remove("hidden");
-      updateResetHint();
-    } else {
-      sendResetLinkDiv.classList.add("hidden");
-    }
-  }
-
-  function updateResetHint() {
-    const emailInput = document.getElementById("username");
-    const hintElement = document.getElementById("sendResetLink-hint");
-
-    if (emailInput.value && emailInput.checkValidity()) {
-      hintElement.innerHTML =
-        "Click the button below to send a password reset link.";
-    } else {
-      hintElement.innerHTML =
-        "Enter a valid email address and click the button below to send a password reset link.";
-    }
-  }
-
-  function loginWithPassword(event) {
-    event.preventDefault();
-    resetMessages();
-
-    if (!validateEmail()) return;
-    if (!validatePassword()) return;
-
-    // Clear any existing error messages
-    document.getElementById("response-container").innerHTML = "";
-    document.getElementById("response-frontend").classList.add("hidden");
-
-    htmx.ajax("POST", "/login", {
-      target: "#response-container",
-      swap: "innerHTML",
-      values: {
-        username: document.getElementById("username").value,
-        password: document.getElementById("password").value,
-      },
-    });
-  }
-
-  function sendMagicLink(event) {
-    event.preventDefault();
-
-    if (!validateEmail()) return;
-
-    resetMessages();
-
-    htmx.ajax("POST", "/magic-login", {
-      target: "#response-container",
-      swap: "innerHTML",
-      values: { username: document.getElementById("username").value },
-    });
-  }
-
-  function sendResetLink(event) {
-    event.preventDefault();
-    resetMessages();
-
-    if (!validateEmail()) return;
-
-    htmx.ajax("POST", "/forgot-password", {
-      target: "#response-container",
-      swap: "innerHTML",
-      values: { username: document.getElementById("username").value },
-    });
-  }
-
-  function resetMessages() {
-    // Clear any existing error messages
-    document.getElementById("response-container").innerHTML = "";
-    document.getElementById("response-frontend").classList.add("hidden");
-  }
-
-  function resetPassword(event) {
-    event.preventDefault();
-    resetMessagesReset();
-
-    if (!validateNewPassword()) return;
-
-    htmx.ajax("POST", "/reset-password", {
-      target: "#response-container-reset",
-      swap: "innerHTML",
-      values: {
-        token: document.getElementById("reset_token").value,
-        new_password: document.getElementById("new_password").value,
-        confirm_password: document.getElementById("confirm_password").value,
-      },
-    });
-  }
-
-  function validateNewPassword() {
-    const newPassword = document.getElementById("new_password").value;
-    const confirmPassword = document.getElementById("confirm_password").value;
-
-    if (!newPassword) {
-      document
-        .getElementById("response-frontend-reset")
-        .classList.remove("hidden");
-      document.getElementById("frontend-error-message-reset").innerHTML =
-        "New password is required.";
-      return false;
-    }
-
-    if (newPassword !== confirmPassword) {
-      document
-        .getElementById("response-frontend-reset")
-        .classList.remove("hidden");
-      document.getElementById("frontend-error-message-reset").innerHTML =
-        "Passwords do not match.";
-      return false;
-    }
-
-    return true;
-  }
-
-  function resetMessagesReset() {
-    // Clear any existing error messages on reset side
-    document.getElementById("response-container-reset").innerHTML = "";
-    document.getElementById("response-frontend-reset").classList.add("hidden");
-  }
-
-  function cancelReset(event) {
-    event.preventDefault();
-    switchToLoginMode();
-  }
-
-  function switchToResetMode() {
-    console.log("Switching to reset mode");
-    const loginForm = document.querySelector(".flip-card-front");
-    const resetForm = document.querySelector(".reset-form");
-    if (loginForm) loginForm.classList.add("hidden");
-    if (resetForm) resetForm.classList.remove("hidden");
-  }
-
-  function switchToLoginMode() {
-    console.log("Switching to login mode");
-    const loginForm = document.querySelector(".flip-card-front");
-    const resetForm = document.querySelector(".reset-form");
-    if (loginForm) loginForm.classList.remove("hidden");
-    if (resetForm) resetForm.classList.add("hidden");
-
-    // Clear password fields on reset side
-    const newPasswordField = document.getElementById("new_password");
-    const confirmPasswordField = document.getElementById("confirm_password");
-    if (newPasswordField) newPasswordField.value = "";
-    if (confirmPasswordField) confirmPasswordField.value = "";
-
-    // Pre-fill username on login side from reset side
-    const usernameReset = document.getElementById("username-reset");
-    const usernameLogin = document.getElementById("username");
-    if (usernameReset && usernameLogin && usernameReset.value) {
-      usernameLogin.value = usernameReset.value;
-      usernameLogin.removeAttribute("readonly");
-    }
-  }
-
-  // Check if we're in reset mode on page load
+  // Check for reset token on page load and switch to password reset view
   document.addEventListener("DOMContentLoaded", function () {
     const resetToken = "{{ reset_token or '' }}";
     if (resetToken) {
-      console.log("Reset token found, switching to reset mode");
-      switchToResetMode();
+      toggleView("password-reset");
+    }
+
+    // Add password validation listeners
+    const newPassword = document.getElementById("new-password");
+    const confirmPassword = document.getElementById("confirm-password");
+
+    if (newPassword && confirmPassword) {
+      newPassword.addEventListener("input", validatePasswordMatch);
+      confirmPassword.addEventListener("input", validatePasswordMatch);
     }
   });
 
-  // Listen for password reset success event from HTMX
-  document.body.addEventListener("passwordResetSuccess", function (event) {
-    console.log("Password reset success event received");
-    switchToLoginMode();
-  });
-
-  // Also listen for HTMX after request event to check for the trigger
+  // Listen for successful password reset and switch back to login view
   document.body.addEventListener("htmx:afterRequest", function (event) {
     if (
       event.detail.xhr.getResponseHeader("HX-Trigger") ===
       "passwordResetSuccess"
     ) {
-      console.log("Password reset success via HX-Trigger");
       setTimeout(function () {
-        switchToLoginMode();
-      }, 1000); // Small delay to show success message first
+        toggleView("login");
+      }, 2000); // Show success message for 2 seconds, then switch to login
     }
   });
 </script>
